@@ -5,16 +5,6 @@
 #include "Kismet/GameplayStatics.h"
 
 
-ASGrenadeLauncher::ASGrenadeLauncher()
-{
-
-}
-
-void ASGrenadeLauncher::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void ASGrenadeLauncher::Fire()
 {
 	// Trace the world, from the pawn eyes to crosshair location (i.e. center of the screen)
