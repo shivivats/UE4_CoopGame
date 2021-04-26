@@ -52,6 +52,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100.0))
 	float ZoomInterpSpeed;
 
+	UPROPERTY( BlueprintReadOnly, Category = "Player")
 	class ASWeapon* CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -69,5 +70,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+
+	//ASWeapon* GetCurrentWeapon();
 
 };

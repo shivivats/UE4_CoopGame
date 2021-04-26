@@ -6,6 +6,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "SWeapon.h"
+#include "Blueprint/UserWidget.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -48,6 +49,12 @@ void ASCharacter::BeginPlay()
 	{
 		CurrentWeapon->SetOwner(this);
 		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+
+		if (CurrentWeapon->AmmoHUD)
+		{
+			UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(GetWorld(), CurrentWeapon->AmmoHUD);
+			WidgetInstance->AddToViewport();
+		}
 	}
 
 }
@@ -142,4 +149,3 @@ FVector ASCharacter::GetPawnViewLocation() const
 
 	return Super::GetPawnViewLocation();
 }
-

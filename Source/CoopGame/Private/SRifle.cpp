@@ -27,6 +27,19 @@ ASRifle::ASRifle()
 
 	// this is the amount of bullets per minute
 	RateOfFire = 600.f;
+
+	MaximumAmmo = 30;
+	CurrentAmmo = MaximumAmmo;
+	MagazineCapacity = 5;
+	MagazineCount = MagazineCapacity;
+
+	bCanShoot = true;
+
+	PitchRecoilRangeMax = 0.2f;
+	PitchRecoilRangeMin = 0.0f;
+
+	YawRecoilRangeMax = 0.05f;
+	YawRecoilRangeMin = -0.05f;
 }
 
 void ASRifle::BeginPlay()
@@ -43,7 +56,8 @@ void ASRifle::Fire()
 	// Trace the world, from the pawn eyes to crosshair location (i.e. center of the screen)
 
 	AActor* MyOwner = GetOwner();
-	if (MyOwner)
+
+	if (MyOwner && bCanShoot)
 	{
 		FVector EyeLocation;
 		FRotator EyeRotation;
@@ -117,18 +131,20 @@ void ASRifle::Fire()
 		PlayFireEffects(TracerEndPoint);
 
 		LastFiredTime = GetWorld()->TimeSeconds;
+
+		ReduceAmmo();
 	}
 }
 
-
-
 void ASRifle::StartFire()
 {
-	// can be minimum 1, cant let this be negative
-	float FirstDelay = FMath::Max(LastFiredTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.f);
+	if (bCanShoot)
+	{	
+		// can be minimum 1, cant let this be negative
+		float FirstDelay = FMath::Max(LastFiredTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.f);
 
-	GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASRifle::Fire, TimeBetweenShots, true, FirstDelay);
-
+		GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASRifle::Fire, TimeBetweenShots, true, FirstDelay);
+	}
 }
 
 void ASRifle::StopFire()
@@ -136,7 +152,30 @@ void ASRifle::StopFire()
 	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }
 
+void ASRifle::ReduceAmmo()
+{
+	CurrentAmmo -= 1;
 
+	if (CurrentAmmo == 0 && MagazineCount >= 0)
+	{
+		Reload();
+	}
+}
+
+void ASRifle::Reload()
+{
+	MagazineCount -= 1;
+
+	if (MagazineCount < 0)
+	{
+		MagazineCount = 0;
+		bCanShoot = false;
+	}
+	else
+	{
+		CurrentAmmo = MaximumAmmo;
+	}
+}
 
 void ASRifle::PlayFireEffects(FVector TracerEnd)
 {
@@ -160,6 +199,9 @@ void ASRifle::PlayFireEffects(FVector TracerEnd)
 		if (PC)
 		{
 			PC->ClientPlayCameraShake(FireCamShake);
+
+			MyOwner->AddControllerPitchInput(-1.f * FMath::RandRange(PitchRecoilRangeMin, PitchRecoilRangeMax));
+			MyOwner->AddControllerYawInput(FMath::RandRange(YawRecoilRangeMin, YawRecoilRangeMax));
 		}
 	}
 

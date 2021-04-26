@@ -27,18 +27,19 @@ protected:
 
 	float LastFiredTime;
 
-
 	/* RPM - Bullets per minute fired by the rifle */
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	float RateOfFire;
 
 	float TimeBetweenShots;
 
-
 public:
-
 
 	virtual void StartFire();
 
 	virtual void StopFire();
+
+	virtual void ReduceAmmo();
+
+	virtual void Reload();
 };

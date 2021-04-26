@@ -10,15 +10,14 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Camera/CameraShake.h"
 
+
+
+
 // Sets default values
 ASWeapon::ASWeapon()
 {
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
-
-
-
-
 }
 
 void ASWeapon::PlayFireEffects(FVector TracerEnd)
@@ -37,6 +36,16 @@ void ASWeapon::StartFire()
 }
 
 void ASWeapon::StopFire()
+{
+
+}
+
+void ASWeapon::ReduceAmmo()
+{
+
+}
+
+void ASWeapon::Reload()
 {
 
 }
