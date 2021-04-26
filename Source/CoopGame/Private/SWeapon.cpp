@@ -8,6 +8,7 @@
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Camera/CameraShake.h"
 
 // Sets default values
 ASWeapon::ASWeapon()
@@ -15,8 +16,9 @@ ASWeapon::ASWeapon()
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
 
-	MuzzleSocketName = "MuzzleSocket";
-	TracerTargetName = "Target";
+
+
+
 }
 
 void ASWeapon::PlayFireEffects(FVector TracerEnd)
@@ -25,6 +27,16 @@ void ASWeapon::PlayFireEffects(FVector TracerEnd)
 }
 
 void ASWeapon::Fire()
+{
+
+}
+
+void ASWeapon::StartFire()
+{
+
+}
+
+void ASWeapon::StopFire()
 {
 
 }

@@ -14,9 +14,31 @@ class COOPGAME_API ASRifle : public ASWeapon
 {
 	GENERATED_BODY()
 
+		ASRifle();
+
 protected:
+	virtual void BeginPlay() override;
+
 	virtual void PlayFireEffects(FVector TracerEnd);
 
-public:
 	virtual void Fire() override;
+
+	FTimerHandle TimerHandle_TimeBetweenShots;
+
+	float LastFiredTime;
+
+
+	/* RPM - Bullets per minute fired by the rifle */
+	UPROPERTY(EditDefaultsOnly, Category="Weapon")
+	float RateOfFire;
+
+	float TimeBetweenShots;
+
+
+public:
+
+
+	virtual void StartFire();
+
+	virtual void StopFire();
 };
