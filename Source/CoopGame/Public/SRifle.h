@@ -14,7 +14,7 @@ class COOPGAME_API ASRifle : public ASWeapon
 {
 	GENERATED_BODY()
 
-		ASRifle();
+	ASRifle();
 
 protected:
 	virtual void BeginPlay() override;
@@ -38,8 +38,4 @@ public:
 	virtual void StartFire();
 
 	virtual void StopFire();
-
-	virtual void ReduceAmmo();
-
-	virtual void Reload();
 };

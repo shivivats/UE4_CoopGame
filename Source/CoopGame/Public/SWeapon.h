@@ -93,6 +93,8 @@ public:
 
 	virtual void Reload();
 
+	virtual void AddRecoilEffects();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<class UUserWidget> AmmoHUD;
 };
