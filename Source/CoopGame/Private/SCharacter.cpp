@@ -65,7 +65,6 @@ void ASCharacter::BeginPlay()
 	}
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
-
 }
 
 void ASCharacter::MoveForward(float Value)
