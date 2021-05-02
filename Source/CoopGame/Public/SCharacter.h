@@ -52,7 +52,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100.0))
 	float ZoomInterpSpeed;
 
-	UPROPERTY( BlueprintReadOnly, Category = "Player")
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	class ASWeapon* CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -68,7 +68,7 @@ protected:
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	/* Pawn died previously */
-	UPROPERTY(BlueprintReadOnly, Category="Player")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category="Player")
 	bool bDied;
 
 public:	

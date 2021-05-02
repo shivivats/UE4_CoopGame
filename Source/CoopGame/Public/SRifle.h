@@ -6,8 +6,23 @@
 #include "SWeapon.h"
 #include "SRifle.generated.h"
 
+// Contains information of a single hitscan weapon linetrace
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+};
+
 /**
- * 
+ * Hitscan weapon derived off the base weapon class
  */
 UCLASS()
 class COOPGAME_API ASRifle : public ASWeapon
@@ -21,6 +36,8 @@ protected:
 
 	virtual void PlayFireEffects(FVector TracerEnd);
 
+	virtual void PlayImpactEffects(EPhysicalSurface HitSurfaceType, FVector ImpactPoint);
+
 	virtual void Fire() override;
 
 	FTimerHandle TimerHandle_TimeBetweenShots;
@@ -32,6 +49,12 @@ protected:
 	float RateOfFire;
 
 	float TimeBetweenShots;
+
+	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
+	FHitScanTrace HitScanTrace;
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
 
 public:
 

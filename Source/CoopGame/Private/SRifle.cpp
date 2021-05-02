@@ -10,6 +10,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopGame/CoopGame.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(
@@ -41,6 +42,9 @@ ASRifle::ASRifle()
 
 	YawRecoilRangeMax = 0.05f;
 	YawRecoilRangeMin = -0.05f;
+
+	NetUpdateFrequency = 66.f;
+	MinNetUpdateFrequency = 33.f;
 }
 
 void ASRifle::BeginPlay()
@@ -54,7 +58,10 @@ void ASRifle::BeginPlay()
 
 void ASRifle::Fire()
 {
-	// Trace the world, from the pawn eyes to crosshair location (i.e. center of the screen)
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		ServerFire();
+	}
 
 	AActor* MyOwner = GetOwner();
 
@@ -80,15 +87,18 @@ void ASRifle::Fire()
 		// smoke particle "target" parameter
 		FVector TracerEndPoint = TraceEnd;
 
+		EPhysicalSurface HitSurfaceType = SurfaceType_Default;
+
 		FHitResult Hit;
 		// this returns true only if we had a blocking it, false otherwise
+		// Trace the world, from the pawn eyes to crosshair location (i.e. center of the screen)
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
 			// Blocking hit! Process damage
 
 			AActor* HitActor = Hit.GetActor();
 
-			EPhysicalSurface HitSurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+			HitSurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
 			float ActualDamage = BaseDamage;
 			if (HitSurfaceType == SURFACE_FLESHVULNERABLE)
@@ -100,29 +110,11 @@ void ASRifle::Fire()
 			// it can allow us to do more complex things later on
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-
-			UParticleSystem* SelectedEffect = nullptr;
-
-			switch (HitSurfaceType)
-			{
-			case SURFACE_FLESHDEFAULT:
-				SelectedEffect = FleshImpactEffect;
-				break;
-			case SURFACE_FLESHVULNERABLE:
-				SelectedEffect = FleshImpactEffect;
-				break;
-			default:
-				SelectedEffect = DefaultImpactEffect;
-				break;
-			}
-
-			if (SelectedEffect)
-			{
-				// play the impact effect here
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
-			}
+			PlayImpactEffects(HitSurfaceType, Hit.ImpactPoint);
 
 			TracerEndPoint = Hit.ImpactPoint;
+
+
 		}
 		if (DebugWeaponDrawing > 0)
 		{
@@ -131,12 +123,28 @@ void ASRifle::Fire()
 
 		PlayFireEffects(TracerEndPoint);
 
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			HitScanTrace.TraceTo = TracerEndPoint;
+			// this makes sure that even if we dont have a blocking hit, we still set the surface type to something
+			HitScanTrace.SurfaceType = HitSurfaceType;
+		}
+
 		LastFiredTime = GetWorld()->TimeSeconds;
 
 		ReduceAmmo();
 
 		AddRecoilEffects();
 	}
+}
+
+void ASRifle::OnRep_HitScanTrace()
+{
+	// Play cosmetix FX
+	PlayFireEffects(HitScanTrace.TraceTo);
+
+	PlayImpactEffects(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
+
 }
 
 void ASRifle::StartFire()
@@ -179,4 +187,39 @@ void ASRifle::PlayFireEffects(FVector TracerEnd)
 			PC->ClientPlayCameraShake(FireCamShake);
 		}
 	}
+}
+
+void ASRifle::PlayImpactEffects(EPhysicalSurface HitSurfaceType, FVector ImpactPoint)
+{
+	UParticleSystem* SelectedEffect = nullptr;
+
+	switch (HitSurfaceType)
+	{
+	case SURFACE_FLESHDEFAULT:
+		SelectedEffect = FleshImpactEffect;
+		break;
+	case SURFACE_FLESHVULNERABLE:
+		SelectedEffect = FleshImpactEffect;
+		break;
+	default:
+		SelectedEffect = DefaultImpactEffect;
+		break;
+	}
+
+	if (SelectedEffect)
+	{
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		FVector ShotDirection = ImpactPoint - MuzzleLocation;
+		ShotDirection.Normalize();
+
+		// play the impact effect here
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, ImpactPoint, ShotDirection.Rotation());
+	}
+}
+
+void ASRifle::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASRifle, HitScanTrace, COND_SkipOwner);
 }

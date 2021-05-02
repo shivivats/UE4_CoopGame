@@ -36,8 +36,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	class UMaterialInterface* ExplodedMaterial;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	UPROPERTY(ReplicatedUsing=OnRep_HasExploded, EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	bool bHasExploded;
+
+	UFUNCTION()
+	void OnRep_HasExploded();
+
+	void PlayExplosionEffects();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	class URadialForceComponent* RadialForceComp;

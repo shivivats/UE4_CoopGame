@@ -6,6 +6,7 @@
 #include "Components/SHealthComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/RadialForceComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ASExplosiveBarrel::ASExplosiveBarrel()
@@ -27,6 +28,9 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	bHasExploded = false;
 
 	ExplosionImpulseIntensity = 500.f;
+
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +41,29 @@ void ASExplosiveBarrel::BeginPlay()
 	DefaultMaterial = MeshComp->GetMaterial(0);
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
+}
+
+void ASExplosiveBarrel::OnRep_HasExploded()
+{
+	PlayExplosionEffects();
+}
+
+void ASExplosiveBarrel::PlayExplosionEffects()
+{
+	// play particle effect
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	if (ExplodedMaterial)
+	{
+		// change the material on the mesh
+		MeshComp->SetMaterial(0, ExplodedMaterial);
+	}
+
+	// launch the barrel upwards
+	FVector ExplosionImpulse = GetActorUpVector() * ExplosionImpulseIntensity;
+	MeshComp->AddImpulse(ExplosionImpulse, NAME_None, true);
+
+	// push away nearby physics actors (hint: radialforcecomponent)
+	RadialForceComp->FireImpulse();
 }
 
 void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -54,18 +81,13 @@ void ASExplosiveBarrel::Explode()
 	// set exploded state to true
 	bHasExploded = true;
 
-	// play particle effect
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
-	if (ExplodedMaterial)
-	{
-		// change the material on the mesh
-		MeshComp->SetMaterial(0, ExplodedMaterial);
-	}
+	PlayExplosionEffects();
 
-	// launch the barrel upwards
-	FVector ExplosionImpulse = GetActorUpVector()* ExplosionImpulseIntensity;
-	MeshComp->AddImpulse(ExplosionImpulse, NAME_None, true);
+}
 
-	// push away nearby physics actors (hint: radialforcecomponent)
-	RadialForceComp->FireImpulse();
+void ASExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASExplosiveBarrel, bHasExploded, COND_SkipOwner);
 }

@@ -9,6 +9,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Camera/CameraShake.h"
+#include "Net/UnrealNetwork.h"
 
 
 
@@ -18,6 +19,8 @@ ASWeapon::ASWeapon()
 {
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
+
+	SetReplicates(true);
 }
 
 void ASWeapon::PlayFireEffects(FVector TracerEnd)
@@ -28,6 +31,16 @@ void ASWeapon::PlayFireEffects(FVector TracerEnd)
 void ASWeapon::Fire()
 {
 
+}
+
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ASWeapon::ServerFire_Validate()
+{
+	return true;
 }
 
 void ASWeapon::StartFire()

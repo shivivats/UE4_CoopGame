@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "SWeapon.generated.h"
 
+ 
+
 UCLASS()
 class COOPGAME_API ASWeapon : public AActor
 {
@@ -51,6 +53,9 @@ protected:
 
 	virtual void Fire();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
+
 	/* Ammo stuffs */
 	UPROPERTY(EditDefaultsOnly,  BlueprintReadOnly, Category = "Weapon")
 	int32 MaximumAmmo;
@@ -94,7 +99,4 @@ public:
 	virtual void Reload();
 
 	virtual void AddRecoilEffects();
-
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TSubclassOf<class UUserWidget> AmmoHUD;
 };
