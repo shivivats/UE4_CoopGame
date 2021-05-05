@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ASExplosiveBarrel::ASExplosiveBarrel()
@@ -31,6 +32,9 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 
 	SetReplicates(true);
 	SetReplicateMovement(true);
+
+	ExplosionDamage = 40.f;
+	ExplosionRadius = 100.f;
 }
 
 // Called when the game starts or when spawned
@@ -64,6 +68,13 @@ void ASExplosiveBarrel::PlayExplosionEffects()
 
 	// push away nearby physics actors (hint: radialforcecomponent)
 	RadialForceComp->FireImpulse();
+
+	TArray<AActor*> IgnoredActors;
+	IgnoredActors.Add(this);
+
+	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+
+	DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.f, 0, 1.f);
 }
 
 void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)

@@ -50,6 +50,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	float ExplosionImpulseIntensity;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	float ExplosionDamage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	float ExplosionRadius;
+
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 };
