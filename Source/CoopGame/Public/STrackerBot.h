@@ -31,6 +31,9 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	class UAudioComponent* AudioComp;
 
+	UPROPERTY(EditAnywhere, Category = "TrackerBot|Testing")
+	bool bActive;
+
 	UFUNCTION()
 	void HandleTakeDamage(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
@@ -39,13 +42,13 @@ protected:
 	// Next point in navigation
 	FVector NextPathPoint;
 
-	UPROPERTY(EditDefaultsOnly, Category="TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category="TrackerBot|Tracking")
 	float MovementForce;
 
-	UPROPERTY(EditDefaultsOnly, Category="TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category="TrackerBot|Tracking")
 	bool bUseVelocityChange;
 
-	UPROPERTY(EditDefaultsOnly, Category="TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category="TrackerBot|Tracking")
 	float RequiredDistanceToTarget;
 
 	// Dynamic material to pulse on damage
@@ -53,25 +56,25 @@ protected:
 
 	void SelfDestruct();
 	
-	UPROPERTY(EditDefaultsOnly, Category="TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category="TrackerBot|Explosion")
 	class UParticleSystem* ExplosionEffect;
 
-	UPROPERTY(EditDefaultsOnly, Category="TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category="TrackerBot|Explosion")
 	float ExplosionDamage;
 
-	UPROPERTY(EditDefaultsOnly, Category="TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category="TrackerBot|Explosion")
 	float ExplosionRadius;
 
-	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot|Explosion")
 	float SelfDamageInterval;
 
-	UPROPERTY(EditDefaultsOnly, Category="TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category="TrackerBot|Explosion")
 	class USoundCue* SelfDestructSound;
 
-	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot|Explosion")
 	class USoundCue* ExplosionSound;
 
-	UPROPERTY(ReplicatedUsing=OnRep_Exploded, EditDefaultsOnly, BlueprintReadOnly, Category = "TrackerBot")
+	UPROPERTY(ReplicatedUsing=OnRep_Exploded, EditDefaultsOnly, BlueprintReadOnly, Category = "TrackerBot|Explosion")
 	bool bExploded;
 
 	bool bStartedSelfDestruction;
@@ -86,6 +89,16 @@ protected:
 	
 	void PlayExplosionEffects();
 
+	void OnCheckNearbyBots();
+	
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot|Hording")
+	float NearbyBotsCheckRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot|Hording")
+	int32 MaxPowerLevel;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "TrackerBot|Hording")
+	int32 CurrentPowerLevel;
 
 public:	
 	// Called every frame

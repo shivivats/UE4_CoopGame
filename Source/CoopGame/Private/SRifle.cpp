@@ -58,7 +58,7 @@ void ASRifle::BeginPlay()
 
 void ASRifle::Fire()
 {
-	if (GetLocalRole() < ROLE_Authority)
+	if (!HasAuthority())
 	{
 		ServerFire();
 	}
@@ -123,7 +123,7 @@ void ASRifle::Fire()
 
 		PlayFireEffects(TracerEndPoint);
 
-		if (GetLocalRole() == ROLE_Authority)
+		if (HasAuthority())
 		{
 			HitScanTrace.TraceTo = TracerEndPoint;
 			// this makes sure that even if we dont have a blocking hit, we still set the surface type to something

@@ -32,6 +32,12 @@ protected:
 
 	FTimerHandle TimerHandle_ExplosionDelay;
 
+	UPROPERTY(ReplicatedUsing=OnRep_Exploded, BlueprintReadOnly, Category="Damage")
+	bool bExploded;
+
+	UFUNCTION()
+	void OnRep_Exploded();
+
 	void Explode();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
@@ -45,4 +51,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 		TSubclassOf<class UDamageType> DamageType;
+
+	void PlayExplosionEffects();
 };

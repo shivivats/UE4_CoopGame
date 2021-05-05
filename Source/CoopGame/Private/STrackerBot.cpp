@@ -40,6 +40,8 @@ ASTrackerBot::ASTrackerBot()
 	AudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComp"));
 	AudioComp->SetupAttachment(RootComponent);
 
+	bActive = true;
+
 	bUseVelocityChange = false;
 	MovementForce = 500.f;
 
@@ -54,6 +56,10 @@ ASTrackerBot::ASTrackerBot()
 
 	SetReplicates(true);
 	SetReplicateMovement(true);
+
+	NearbyBotsCheckRadius = 600.f;
+	MaxPowerLevel = 4;
+	CurrentPowerLevel = 0;
 }
 
 // Called when the game starts or when spawned
@@ -61,10 +67,13 @@ void ASTrackerBot::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// nativation stuff only done on the server
-	if (GetLocalRole() == ROLE_Authority)
+	// navigation stuff only done on the server
+	if (HasAuthority() && bActive)
 	{
 		NextPathPoint = GetNextPathPoint();	
+
+		FTimerHandle TimerHandle_CheckNearbyBots;
+		GetWorldTimerManager().SetTimer(TimerHandle_CheckNearbyBots, this, &ASTrackerBot::OnCheckNearbyBots, 1.f, true);
 	}
 }
 
@@ -120,13 +129,15 @@ void ASTrackerBot::SelfDestruct()
 
 	// disable the mesh so that we dont see or feel anything while waiting for the explosion and for the object to get destroyed
 
-	if (GetLocalRole() == ROLE_Authority)
+	if (HasAuthority())
 	{
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
 
+		float ActualDamage = ExplosionDamage + (ExplosionDamage * CurrentPowerLevel);
+
 		// Apply damage on the server
-		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		UGameplayStatics::ApplyRadialDamage(this, ActualDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.f, 0, 1.f);
 
@@ -157,8 +168,50 @@ void ASTrackerBot::PlayExplosionEffects()
 
 	MeshComp->SetVisibility(false, true);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
 
-	MeshComp->SetSimulatePhysics(false);
+void ASTrackerBot::OnCheckNearbyBots()
+{
+	// Create a temporary collision shape for overlaps
+	FCollisionShape CollShape;
+	CollShape.SetSphere(NearbyBotsCheckRadius);
+
+	FCollisionObjectQueryParams QueryParams;
+	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	TArray<FOverlapResult> Overlaps;
+	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
+
+	DrawDebugSphere(GetWorld(), GetActorLocation(), NearbyBotsCheckRadius, 12, FColor::White, false, 1.f);
+
+	int32 NumBots = 0;
+
+	for (FOverlapResult Result : Overlaps)
+	{
+		ASTrackerBot* OtherBot = Cast<ASTrackerBot>(Result.GetActor());
+
+		if (OtherBot && OtherBot != this)
+		{
+			NumBots++;
+		}
+	}
+
+	CurrentPowerLevel = FMath::Clamp(NumBots, 0, MaxPowerLevel);
+
+	if (MatInst == nullptr)
+	{
+		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+	}
+	if (MatInst)
+	{
+		float Alpha = CurrentPowerLevel / (float)MaxPowerLevel;
+		MatInst->SetScalarParameterValue("PowerLevelAlpha", Alpha);
+	}
+
+	// draw on the bot location
+	DrawDebugString(GetWorld(), GetActorLocation(), FString::FromInt(CurrentPowerLevel), this, FColor::White, 1.f, true);
+
 }
 
 // Called every frame
@@ -167,7 +220,7 @@ void ASTrackerBot::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// all the movement will only be done on the server, and only check for it if we're not exploded
-	if (GetLocalRole() == ROLE_Authority && !bExploded)
+	if (HasAuthority() && !bExploded && bActive)
 	{
 		float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
 
@@ -176,7 +229,7 @@ void ASTrackerBot::Tick(float DeltaTime)
 			// if close enough, get next path point
 			NextPathPoint = GetNextPathPoint();
 
-			DrawDebugString(GetWorld(), GetActorLocation(), "Target Reached!");
+			//DrawDebugString(GetWorld(), GetActorLocation(), "Target Reached!");
 		}
 		else
 		{
@@ -198,7 +251,7 @@ void ASTrackerBot::Tick(float DeltaTime)
 
 void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 {
-	if (!bStartedSelfDestruction && !bExploded)
+	if (!bStartedSelfDestruction && !bExploded && bActive)
 	{
 		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
 
@@ -206,7 +259,7 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 		{
 			// overlapped with player
 
-			if (GetLocalRole() == ROLE_Authority)
+			if (HasAuthority())
 			{
 				//start self destruction sequence
 				GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDamageInterval, true, 0.f);

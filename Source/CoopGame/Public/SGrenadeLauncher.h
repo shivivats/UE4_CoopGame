@@ -32,7 +32,7 @@ protected:
 	float AllowedTimeBetweenShots;
 
 	float LastFiredTime;
-
+	
 public:
 
 	virtual void StartFire() override;

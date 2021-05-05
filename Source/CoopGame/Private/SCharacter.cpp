@@ -49,7 +49,7 @@ void ASCharacter::BeginPlay()
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 
-	if (GetLocalRole() == ROLE_Authority)
+	if (HasAuthority())
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

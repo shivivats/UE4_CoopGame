@@ -36,23 +36,33 @@ void ASGrenadeLauncher::BeginPlay()
 
 void ASGrenadeLauncher::Fire()
 {
+	if (!HasAuthority())
+	{
+		ServerFire();
+		return;
+	}
+
 	AActor* MyOwner = GetOwner();
+
 	if (MyOwner && bCanShoot && GrenadeProjectile)
 	{
-		FVector EyeLocation;
-		FRotator EyeRotation;
-		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+		if (HasAuthority())
+		{
+			FVector EyeLocation;
+			FRotator EyeRotation;
+			MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
-		//FRotator MuzzleRotation = MeshComp->GetSocketRotation(MuzzleSocketName);
+			FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+			//FRotator MuzzleRotation = MeshComp->GetSocketRotation(MuzzleSocketName);
 
-		//Set Spawn Collision Handling Override
-		FActorSpawnParameters ActorSpawnParams;
-		ActorSpawnParams.Owner = MyOwner;
-		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			//Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.Owner = MyOwner;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		AActor* CurrentProjectile = GetWorld()->SpawnActor<AActor>(GrenadeProjectile, MuzzleLocation, EyeRotation, ActorSpawnParams);
-		CurrentProjectile->SetOwner(MyOwner);		
+			AActor* CurrentProjectile = GetWorld()->SpawnActor<AActor>(GrenadeProjectile, MuzzleLocation, EyeRotation, ActorSpawnParams);
+			CurrentProjectile->SetOwner(MyOwner);
+		}
 
 		LastFiredTime = GetWorld()->TimeSeconds;
 
