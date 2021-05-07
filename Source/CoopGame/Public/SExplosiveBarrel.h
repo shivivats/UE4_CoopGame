@@ -30,6 +30,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Explosion")
 	class UParticleSystem* ExplosionEffect;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Explosion")
+	class USoundCue* ExplosionSound;
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	class UMaterialInterface* DefaultMaterial;
 

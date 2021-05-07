@@ -8,6 +8,7 @@
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ASExplosiveBarrel::ASExplosiveBarrel()
@@ -61,6 +62,8 @@ void ASExplosiveBarrel::PlayExplosionEffects()
 		// change the material on the mesh
 		MeshComp->SetMaterial(0, ExplodedMaterial);
 	}
+
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation());
 
 	// launch the barrel upwards
 	FVector ExplosionImpulse = GetActorUpVector() * ExplosionImpulseIntensity;

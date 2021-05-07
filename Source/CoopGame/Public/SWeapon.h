@@ -46,7 +46,7 @@ protected:
 	FName TracerTargetName;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TSubclassOf<class UCameraShake> FireCamShake;
+	TSubclassOf<class UMatineeCameraShake> FireCamShake;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float BaseDamage;
