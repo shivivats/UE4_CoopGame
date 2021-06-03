@@ -33,10 +33,20 @@ protected:
 
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	UPROPERTY(VisibleAnywhere, Replicated)
+	bool bIsInvulnerable;
 	
 public:
+
+	float GetHealth() const;
 
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnHealthChangedSignature OnHealthChanged;
 
+	UFUNCTION(BlueprintCallable, Category="HealthComponent")
+	void Heal(float HealAmount);
+
+	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
+	void SetIsInvulerable(bool Invulnerability);
 };

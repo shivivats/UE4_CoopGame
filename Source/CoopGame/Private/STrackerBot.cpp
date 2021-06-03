@@ -107,7 +107,7 @@ FVector ASTrackerBot::GetNextPathPoint()
 
 	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
 
-	if (NavPath->PathPoints.Num() > 1)
+	if (NavPath && NavPath->PathPoints.Num() > 1)
 	{
 		return NavPath->PathPoints[1];
 	}
@@ -183,7 +183,7 @@ void ASTrackerBot::OnCheckNearbyBots()
 	TArray<FOverlapResult> Overlaps;
 	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
 
-	DrawDebugSphere(GetWorld(), GetActorLocation(), NearbyBotsCheckRadius, 12, FColor::White, false, 1.f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), NearbyBotsCheckRadius, 12, FColor::White, false, 1.f);
 
 	int32 NumBots = 0;
 
@@ -251,6 +251,8 @@ void ASTrackerBot::Tick(float DeltaTime)
 
 void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 {
+	Super::NotifyActorBeginOverlap(OtherActor);
+
 	if (!bStartedSelfDestruction && !bExploded && bActive)
 	{
 		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);

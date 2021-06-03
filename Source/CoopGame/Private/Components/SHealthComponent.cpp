@@ -9,6 +9,8 @@ USHealthComponent::USHealthComponent()
 {
 	DefaultHealth = 100.f;
 
+	bIsInvulnerable = false;
+
 	SetIsReplicatedByDefault(true);
 }
 
@@ -41,10 +43,11 @@ void USHealthComponent::OnRep_Health(float OldHealth)
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage <= 0.0f)
+	if (Damage <= 0.0f || bIsInvulnerable)
 	{
 		return;
 	}
+
 	// Update health clamped
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
 
@@ -53,7 +56,34 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 }
 
+float USHealthComponent::GetHealth() const
+{
+	return Health;
+}
+
+void USHealthComponent::Heal(float HealAmount)
+{
+	if(HealAmount <= 0.f || Health <= 0.f)
+	{
+		return;
+	}
+
+	Health = FMath::Clamp(Health + HealAmount, 0.f, DefaultHealth);
+
+	UE_LOG(LogTemp, Log, TEXT("Health Changed: %s (+%s)"), *FString::SanitizeFloat(Health), *FString::SanitizeFloat(HealAmount));
+
+	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
+}
+
+void USHealthComponent::SetIsInvulerable(bool Invulnerability)
+{
+	bIsInvulnerable = Invulnerability;
+}
+
 void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(USHealthComponent, Health);
+	DOREPLIFETIME(USHealthComponent, bIsInvulnerable);
 }
