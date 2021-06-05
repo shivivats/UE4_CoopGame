@@ -5,6 +5,8 @@
 #include "TimerManager.h"
 #include "Components/SHealthComponent.h"
 #include "EngineUtils.h"
+#include "SGameState.h"
+#include "SPlayerState.h"
 
 
 ASGameMode::ASGameMode()
@@ -14,8 +16,10 @@ ASGameMode::ASGameMode()
 
 	TimeBetweenWaves = 2.f;
 
-	PrimaryActorTick.bCanEverTick = true;
+	GameStateClass = ASGameState::StaticClass();
+	PlayerStateClass = ASPlayerState::StaticClass();
 
+	PrimaryActorTick.bCanEverTick = true;
 	// make it tick every one second
 	PrimaryActorTick.TickInterval = 1.f;
 }
@@ -45,16 +49,24 @@ void ASGameMode::StartWave()
 	NrOfBotsToSpawn = 2 * WaveCount;
 
 	GetWorldTimerManager().SetTimer(TimerHandle_BotSpawner, this, &ASGameMode::SpawnBotTimerElapsed, BotSpawnRate, true, InitialBotSpawnDelay);
+
+	SetWaveState(EWaveState::WaveInProgress);
 }
 
 void ASGameMode::EndWave()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle_BotSpawner);
+
+	SetWaveState(EWaveState::WaitingToComplete);
 }
 
 void ASGameMode::PrepareForNextWave()
 {
 	GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &ASGameMode::StartWave, TimeBetweenWaves, false);
+
+	SetWaveState(EWaveState::WaitingToStart);
+
+	RespawnDeadPlayers();
 }
 
 void ASGameMode::CheckWaveState()
@@ -91,6 +103,8 @@ void ASGameMode::CheckWaveState()
 
 	if(!bIsAnyBotAlive)
 	{
+		SetWaveState(EWaveState::WaveComplete);
+
 		PrepareForNextWave();
 	}
 }
@@ -128,7 +142,34 @@ void ASGameMode::GameOver()
 	EndWave();
 
 	// @TODO: Finish up the match, present 'game over' to the players
+
+	SetWaveState(EWaveState::GameOver);
+
 	UE_LOG(LogTemp, Log, TEXT("GAME OVER! Players Died"));
+}
+
+void ASGameMode::SetWaveState(EWaveState NewState)
+{
+	ASGameState* GS = GetGameState<ASGameState>();
+
+	// GameState should *always* exist and if it isnt then we want to be notified of that
+	if(ensureAlways(GS))
+	{
+		GS->SetWaveState(NewState);
+	}
+}
+
+void ASGameMode::RespawnDeadPlayers()
+{
+	// this will give us all the player controllers and since its only inside the game mode, it'll only run on the server
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (PC && PC->GetPawn() == nullptr)
+		{
+			RestartPlayer(PC);
+		}
+	}
 }
 
 void ASGameMode::SpawnBotTimerElapsed()
