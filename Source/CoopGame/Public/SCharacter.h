@@ -31,10 +31,6 @@ protected:
 
 	void EndZoom();
 
-	void StartFire();
-
-	void StopFire();
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UCameraComponent* CameraComp;
 
@@ -80,6 +76,10 @@ public:
 
 	virtual FVector GetPawnViewLocation() const override;
 
-	//ASWeapon* GetCurrentWeapon();
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StartFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StopFire();
 
 };

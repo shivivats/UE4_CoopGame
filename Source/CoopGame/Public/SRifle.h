@@ -50,6 +50,10 @@ protected:
 
 	float TimeBetweenShots;
 
+	/* Bullet Spread in Degrees */
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin=0.f))
+	float BulletSpread;
+
 	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
 	FHitScanTrace HitScanTrace;
 

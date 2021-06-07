@@ -99,6 +99,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "TrackerBot|Hording")
 	int32 CurrentPowerLevel;
+	
+	FTimerHandle TimerHandle_RefreshPath;
+
+	void RefreshPath();
 
 public:	
 	// Called every frame

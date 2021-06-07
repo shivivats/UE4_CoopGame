@@ -15,6 +15,9 @@ USHealthComponent::USHealthComponent()
 	SetIsReplicatedByDefault(true);
 
 	bIsDead = false;
+
+	// by default 255 but we will change it in everything that uses a HealthComponent
+	TeamNum = 255;
 }
 
 
@@ -51,6 +54,13 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 		return;
 	}
 
+	// check for if we're getting friendly fire, but allow us to damage ourselves
+	if(DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))
+	{
+		// we dont want to apply any friendly fire
+		return;
+	}
+
 	// Update health clamped
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
 
@@ -60,7 +70,7 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 
 	bIsDead = Health <= 0.f;
 
-	if(Health <= 0.f)
+	if (Health <= 0.f)
 	{
 		ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
 		if (GM)
@@ -78,7 +88,7 @@ float USHealthComponent::GetHealth() const
 
 void USHealthComponent::Heal(float HealAmount)
 {
-	if(HealAmount <= 0.f || Health <= 0.f)
+	if (HealAmount <= 0.f || Health <= 0.f)
 	{
 		return;
 	}
@@ -93,6 +103,28 @@ void USHealthComponent::Heal(float HealAmount)
 void USHealthComponent::SetIsInvulerable(bool Invulnerability)
 {
 	bIsInvulnerable = Invulnerability;
+}
+
+bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
+{
+	if (ActorA == nullptr || ActorB == nullptr)
+	{
+		// Assume Friendly
+		return true;
+	}
+
+	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::StaticClass()));
+
+	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::StaticClass()));
+
+	if (HealthCompA == nullptr || HealthCompB == nullptr)
+	{
+		// Assume Friendly
+		return true;
+	}
+
+	return HealthCompA->TeamNum == HealthCompB->TeamNum;
+
 }
 
 void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

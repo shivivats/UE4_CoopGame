@@ -21,6 +21,10 @@
 		{
 			"Name": "Ansel",
 			"Enabled": true
+		},
+		{
+			"Name": "ApexDestruction",
+			"Enabled": true
 		}
 	]
 }

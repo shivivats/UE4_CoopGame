@@ -18,6 +18,10 @@ public:
 	// Sets default values for this component's properties
 	USHealthComponent();
 
+	/* Team ID for this Health Component */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="HealthComponent")
+	uint8 TeamNum;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -51,4 +55,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
 	void SetIsInvulerable(bool Invulnerability);
+
+	/* Returns 'true' if the two actors are friendly. (BlueprintPure makes this not have an execution pin in blueprints) */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
+	static bool IsFriendly(AActor* ActorA, AActor* ActorB);
 };

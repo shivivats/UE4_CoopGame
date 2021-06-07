@@ -26,6 +26,8 @@ ASRifle::ASRifle()
 
 	BaseDamage = 20.f;
 
+	BulletSpread = 2.f;
+
 	// this is the amount of bullets per minute
 	RateOfFire = 600.f;
 
@@ -45,6 +47,7 @@ ASRifle::ASRifle()
 
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
 }
 
 void ASRifle::BeginPlay()
@@ -72,6 +75,10 @@ void ASRifle::Fire()
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
 		FVector ShotDirection = EyeRotation.Vector();
+
+		// Bullet Spread
+		float HalfRad = FMath::DegreesToRadians(BulletSpread);
+		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
 
 		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
@@ -108,7 +115,7 @@ void ASRifle::Fire()
 
 			// we can apply point damage here since we have the information needed for it
 			// it can allow us to do more complex things later on
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 
 			PlayImpactEffects(HitSurfaceType, Hit.ImpactPoint);
 
