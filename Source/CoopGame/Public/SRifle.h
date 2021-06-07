@@ -40,6 +40,8 @@ protected:
 
 	virtual void Fire() override;
 
+	virtual void PenetratingFire();
+
 	FTimerHandle TimerHandle_TimeBetweenShots;
 
 	float LastFiredTime;
@@ -60,9 +62,22 @@ protected:
 	UFUNCTION()
 	void OnRep_HitScanTrace();
 
+	UPROPERTY(EditAnywhere, Category="Weapon")
+	bool bShootPenetrating;
+
+private:
+
+	UPROPERTY(EditAnywhere, Category = "BulletDecals")
+	UMaterialInterface* BulletHoleDecal;
+
+	/* This function creates a bullet hole at the location we have hit */
+	void CreateBulletHole(FHitResult* Object);
+
 public:
 
 	virtual void StartFire();
 
 	virtual void StopFire();
+
+
 };
