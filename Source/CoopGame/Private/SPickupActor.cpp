@@ -6,6 +6,8 @@
 #include "Components/DecalComponent.h"
 #include "SPowerupActor.h"
 #include "TimerManager.h"
+#include "SCharacter.h"
+#include "Components/SHealthComponent.h"
 
 // Sets default values
 ASPickupActor::ASPickupActor()
@@ -58,12 +60,20 @@ void ASPickupActor::NotifyActorBeginOverlap(AActor* OtherActor)
 
 	if (GetLocalRole() == ROLE_Authority && PowerUpInstance)
 	{
-		PowerUpInstance->ActivatePowerup(OtherActor);
+		ASCharacter* PlayerChar = Cast<ASCharacter>(OtherActor);
+		if(PlayerChar)
+		{
+			USHealthComponent* HealthComp = Cast<USHealthComponent>(PlayerChar->GetComponentByClass(USHealthComponent::StaticClass()));
+			if(HealthComp && HealthComp->TeamNum == 0)
+			{
+				PowerUpInstance->ActivatePowerup(OtherActor);
 
-		PowerUpInstance = nullptr;
+				PowerUpInstance = nullptr;
 
-		// Set timer to respawn the powerup once again
-		GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickupActor::Respawn, CooldownDuration);
+				// Set timer to respawn the powerup once again
+				GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickupActor::Respawn, CooldownDuration);
+			}
+		}		
 	}
 }
 
