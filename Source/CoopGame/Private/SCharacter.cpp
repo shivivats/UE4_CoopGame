@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "CoopGame/CoopGame.h"
 #include "Components/SHealthComponent.h"
+#include "Components/SInteractionComponent.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -38,6 +39,9 @@ ASCharacter::ASCharacter()
 	ZoomInterpSpeed = 20.0f;
 
 	WeaponAttachSocketName = "WeaponSocket";
+
+	InteractionCheckFrequency = 0.f;
+	InteractionCheckDistance = 1000.f; // in cms, so this is 10 meters max distance
 }
 
 // Called when the game starts or when spawned
@@ -111,6 +115,18 @@ void ASCharacter::StopFire()
 	}
 }
 
+bool ASCharacter::IsInteracting() const
+{
+	// check if the timer is active
+	return GetWorldTimerManager().IsTimerActive(TimerHandle_Interact);
+}
+
+float ASCharacter::GetRemainingInteractTime() const
+{
+	// simply return the time remaining
+	return GetWorldTimerManager().GetTimerRemaining(TimerHandle_Interact);
+}
+
 void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta,
 	const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
@@ -130,6 +146,182 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 	}
 }
 
+void ASCharacter::PerformInteractionCheck()
+{
+	InteractionData.LastInteractionCheckTime = GetWorld()->GetTimeSeconds();
+
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	this->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+	
+	FVector TraceStart = EyeLocation;
+	FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * InteractionCheckDistance);
+	FHitResult TraceHit;
+
+	// Making sure the raycast doesnt hit the player themselves
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(true);
+
+	// Run a line trace where we are looking
+	if (GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+	{
+		// Check if we hit something
+		if (TraceHit.GetActor())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("saw an object"));
+			// Check if the thing we hit is an interactable
+			if (USInteractionComponent* InteractionComponent = Cast<USInteractionComponent>(TraceHit.GetActor()->GetComponentByClass(USInteractionComponent::StaticClass())))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("saw an interactable object"));
+
+				// Get how far away we are from the object
+				float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
+
+				// we found interactable and we are within distance
+				if (InteractionComponent != GetInteractable() && Distance <= InteractionComponent->InteractionDistance)
+				{
+					FoundNewInteractable(InteractionComponent);
+				}
+				// we found interactable but we are not within distance
+				else if (GetInteractable() && Distance > InteractionComponent->InteractionDistance)
+				{
+					CouldntFindInteractable();
+				}
+
+				return;
+			}
+		}
+	}
+
+	// if we get here then we either didnt hit an actor or we didnt hit an interactable
+	CouldntFindInteractable();
+}
+
+void ASCharacter::CouldntFindInteractable()
+{
+	// We've lost the interactable. Clear the timer.
+	if (GetWorldTimerManager().IsTimerActive(TimerHandle_Interact))
+	{
+		GetWorldTimerManager().ClearTimer(TimerHandle_Interact);
+	}
+
+	// Tell the interactable we've stopped focusing on it and clear the current interactable
+	if (USInteractionComponent* Interactable = GetInteractable())
+	{
+		Interactable->EndFocus(this);
+
+		if (InteractionData.bInteractHeld)
+		{
+			EndInteract();
+		}
+	}
+
+	// arent viewing any interactable anymore
+	InteractionData.ViewedInteractionComponent = nullptr;
+}
+
+void ASCharacter::FoundNewInteractable(USInteractionComponent* Interactable)
+{
+	// when we find a new interactable, first stop interacting with any current interactable
+	EndInteract();
+
+	// remove focus from the old interactable if any
+	if (USInteractionComponent* OldInteractable = GetInteractable())
+	{
+		OldInteractable->EndFocus(this);
+	}
+
+	// then update the interaction data to have the new interactable
+	InteractionData.ViewedInteractionComponent = Interactable;
+	Interactable->BeginFocus(this);
+}
+
+void ASCharacter::BeginInteract()
+{
+	// if we're not the server
+	if (!HasAuthority())
+	{
+		// we wanna call begin interact on the server
+		ServerBeginInteract();
+	}
+
+	InteractionData.bInteractHeld = true;
+
+	// if we have an interactable component
+	if (USInteractionComponent* Interactable = GetInteractable())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("try to interact with an object"));
+
+		Interactable->BeginInteract(this);
+
+		// if interaction time is smol
+		if (FMath::IsNearlyZero(Interactable->InteractionTime))
+		{
+			Interact();
+		}
+		else
+		{
+			// now we gotta wait to interact. set a timer to call interact function after the interaction time has elapsed
+			GetWorldTimerManager().SetTimer(TimerHandle_Interact, this, &ASCharacter::Interact, Interactable->InteractionTime, false);
+		}
+	}
+}
+
+void ASCharacter::EndInteract()
+{
+	// if we're not the server
+	if (!HasAuthority())
+	{
+		// we wanna call end interact on the server
+		ServerEndInteract();
+	}
+
+	InteractionData.bInteractHeld = false;
+
+	// clear the interaction duration timer if the timer was running
+	GetWorldTimerManager().ClearTimer(TimerHandle_Interact);
+
+	if (USInteractionComponent* Interactable = GetInteractable())
+	{
+		Interactable->EndInteract(this);
+	}
+}
+
+void ASCharacter::ServerBeginInteract_Implementation()
+{
+	// we just call the begin interact function on the server
+	BeginInteract();
+}
+
+bool ASCharacter::ServerBeginInteract_Validate()
+{
+	return true;
+}
+
+void ASCharacter::ServerEndInteract_Implementation()
+{
+	// we just call the end interact function on the server
+	EndInteract();
+}
+
+bool ASCharacter::ServerEndInteract_Validate()
+{
+	return true;
+}
+
+void ASCharacter::Interact()
+{
+	// clear the interaction duration timer if the timer was running
+	GetWorldTimerManager().ClearTimer(TimerHandle_Interact);
+
+	// we call the interactable's interact function
+	if (USInteractionComponent* Interactable = GetInteractable())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("INTERACTED WITH AN OBJECT"));
+		Interactable->Interact(this);
+	}
+}
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
@@ -140,6 +332,17 @@ void ASCharacter::Tick(float DeltaTime)
 	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 
 	CameraComp->SetFieldOfView(NewFOV);
+
+	// if we are the server and we are interacting
+	//const bool bIsInteractingOnServer = (HasAuthority() && IsInteracting());
+
+
+	// only perform interaction check according to the interaction frequency, for optimisation
+	if (GetWorld()->TimeSince(InteractionData.LastInteractionCheckTime) >= InteractionCheckFrequency)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("performing interaction check"));
+		PerformInteractionCheck();
+	}
 }
 
 // Called to bind functionality to input
@@ -155,6 +358,9 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ASCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ASCharacter::EndCrouch);
+
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASCharacter::BeginInteract);
+	PlayerInputComponent->BindAction("Interact", IE_Released, this, &ASCharacter::EndInteract);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 
