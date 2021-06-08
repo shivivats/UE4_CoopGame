@@ -151,7 +151,7 @@ void ASRifle::PenetratingFire()
 {
 	if (!HasAuthority())
 	{
-		ServerFire();
+		ServerPenetratingFire();
 	}
 
 	AActor* MyOwner = GetOwner();
@@ -220,8 +220,6 @@ void ASRifle::PenetratingFire()
 				// if we hit a solid wall or cube, and its not pending kill then stop processing hit results
 				if (PotentialSolidMaterial != nullptr && !PotentialSolidMaterial->IsPendingKill())
 				{
-
-
 					// secondly, check if we have hit a penetrable actor
 					USPenetrationComponent* PenetrationComponent = Cast<USPenetrationComponent>(PotentialSolidMaterial->GetComponentByClass(USPenetrationComponent::StaticClass()));
 
@@ -257,7 +255,6 @@ void ASRifle::PenetratingFire()
 				PlayImpactEffects(HitSurfaceType, Hit.ImpactPoint);
 
 				TracerEndPoint = Hit.ImpactPoint;
-
 			}
 		}
 
@@ -290,6 +287,16 @@ void ASRifle::OnRep_HitScanTrace()
 
 	PlayImpactEffects(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
 
+}
+
+void ASRifle::ServerPenetratingFire_Implementation()
+{
+	PenetratingFire();
+}
+
+bool ASRifle::ServerPenetratingFire_Validate()
+{
+	return true;
 }
 
 void ASRifle::CreateBulletHole(FHitResult* Object)

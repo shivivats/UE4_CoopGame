@@ -65,6 +65,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Weapon")
 	bool bShootPenetrating;
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerPenetratingFire();
+
 private:
 
 	UPROPERTY(EditAnywhere, Category = "BulletDecals")

@@ -210,6 +210,7 @@ void ASTrackerBot::PlayExplosionEffects()
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation());
 
 	MeshComp->SetVisibility(false, true);
+	MeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MeshComp->SetSimulatePhysics(false);
 }
