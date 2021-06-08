@@ -211,6 +211,7 @@ void ASTrackerBot::PlayExplosionEffects()
 
 	MeshComp->SetVisibility(false, true);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	MeshComp->SetSimulatePhysics(false);
 }
 
 void ASTrackerBot::OnCheckNearbyBots()
