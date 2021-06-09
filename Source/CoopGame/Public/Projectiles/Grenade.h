@@ -35,14 +35,14 @@ protected:
 
 	FTimerHandle TimerHandle_ExplosionDelay;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Exploded, BlueprintReadOnly, Category = "Explosion")
-	bool bExploded;
+	UPROPERTY(ReplicatedUsing = OnRep_GrenadeExploded, BlueprintReadOnly, Category = "Explosion")
+	bool bGrenadeExploded;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	float GrenadeLifetimeAfterExplosion;
 
 	UFUNCTION()
-	virtual void OnRep_Exploded();
+	virtual void OnRep_GrenadeExploded();
 
 	virtual void Explode();
 

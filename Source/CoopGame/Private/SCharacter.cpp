@@ -136,7 +136,7 @@ void ASCharacter::PrepareThrow()
 				UE_LOG(LogTemp, Warning, TEXT("spawned grenade in hand"));
 				//CurrentGrenade->SetOwner(this);
 				CurrentGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, GrenadeAttachSocketName);
-				CurrentGrenade->SetActorScale3D(FVector(0.1f));
+				//CurrentGrenade->SetActorScale3D(FVector(0.1f));
 			}
 		}
 
@@ -357,7 +357,7 @@ void ASCharacter::BeginInteract()
 	// if we have an interactable component
 	if (USInteractionComponent* Interactable = GetInteractable())
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("try to interact with an object"));
+		UE_LOG(LogTemp, Warning, TEXT("try to interact with an object"));
 
 		Interactable->BeginInteract(this);
 

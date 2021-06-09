@@ -14,12 +14,13 @@
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/BoxComponent.h"
+#include "CoopGame/CoopGame.h"
 
 // Sets default values
 ASmokeGrenade::ASmokeGrenade()
 {
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
-	BoxCollider->SetBoxExtent(FVector(32.f, 150.f, 180.f));
+	BoxCollider->SetBoxExtent(FVector(200.f, 200.f, 180.f));
 	BoxCollider->SetCollisionResponseToAllChannels(ECR_Ignore);
 	BoxCollider->SetRelativeLocation(FVector(0.f, 0.f, 160.f));
 	BoxCollider->SetupAttachment(RootComponent);
@@ -35,6 +36,10 @@ ASmokeGrenade::ASmokeGrenade()
 void ASmokeGrenade::BeginPlay()
 {
 	Super::BeginPlay();
+
+	BoxCollider->SetRelativeLocation(FVector(0.f, 0.f, 160.f));
+	BoxCollider->SetRelativeScale3D(FVector(10.f));
+
 	
 }
 
@@ -44,7 +49,7 @@ void ASmokeGrenade::Explode()
 
 	if (MyOwner)
 	{
-		bExploded = true;
+		bGrenadeExploded = true;
 
 		PlayExplosionEffects();
 
@@ -84,5 +89,10 @@ void ASmokeGrenade::PlayExplosionEffects()
 
 	//BoxCollider->SetCollisionResponseToAllChannels(ECR_Block);
 	BoxCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	//BoxCollider->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
 	BoxCollider->SetGenerateOverlapEvents(true);
+
+	BoxCollider->SetRelativeLocation(FVector(0.f, 0.f, 160.f));
+	BoxCollider->SetRelativeScale3D(FVector(10.f));
+	BoxCollider->SetWorldRotation(FRotator::ZeroRotator);
 }

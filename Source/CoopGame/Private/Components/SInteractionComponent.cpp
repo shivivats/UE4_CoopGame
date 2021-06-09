@@ -60,7 +60,26 @@ void USInteractionComponent::Deactivate()
 
 bool USInteractionComponent::CanInteract(class ASCharacter* Character) const
 {
+	// here if we allow multiple interactors, first bool is true
+	// if we have more than one interactor, that will be true, so overall true
+	// and that should fail
+	
+	// if we dont allow multiple interactors, first one is false
+	// if we already have one itneracting, interactors num will be >= 1, hence true
+	// hence overall check will fail
+
 	const bool bPlayerAlreadyInteracting = !bAllowMultipleInteractors && Interactors.Num() >= 1;
+
+	UE_LOG(LogTemp, Warning, 
+		TEXT("Interaction stuff. not bAllowMultipleInteractors is %s, Interactors.Num() is %d"), 
+		(!bAllowMultipleInteractors ? TEXT("true") : TEXT("false")), Interactors.Num());
+
+	UE_LOG(LogTemp, Warning, 
+		TEXT("Interaction stuff. not bPlayerAlreadyInteracting is %s, IsActive is %s, GetOwner thing is %s, Character thing is %s"), 
+		(!bPlayerAlreadyInteracting ? TEXT("true") : TEXT("false")), 
+		(IsActive() ? TEXT("true") : TEXT("false")), 
+		(GetOwner() != nullptr ? TEXT("true") : TEXT("false")), 
+		(Character != nullptr ? TEXT("true") : TEXT("false")));
 
 	// check some conditions for if we can interact
 	return !bPlayerAlreadyInteracting && IsActive() && GetOwner() != nullptr && Character != nullptr;
@@ -152,11 +171,13 @@ void USInteractionComponent::EndInteract(class ASCharacter* Character)
 
 void USInteractionComponent::Interact(class ASCharacter* Character)
 {
-	if (CanInteract(Character))
-	{
-		// call the delegate
-		OnInteract.Broadcast(Character);
-	}
+	//if (CanInteract(Character))
+	//{
+	UE_LOG(LogTemp, Warning, TEXT("calling interact delegate"));
+
+	// call the delegate
+	OnInteract.Broadcast(Character);
+	//}
 
 }
 

@@ -43,7 +43,7 @@ AGrenade::AGrenade()
 	ExplosionDamage = 20.f;
 	ExplosionRadius = 100.f;
 	*/
-	bExploded = false;
+	bGrenadeExploded = false;
 
 	SetReplicates(true);
 	SetReplicateMovement(true);
@@ -61,10 +61,12 @@ void AGrenade::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("Added owner to ignored actors"))
 		MeshComp->IgnoreActorWhenMoving(GetOwner(), true);
 	}	
+
+	MeshComp->SetWorldScale3D(FVector(0.1f));
 }
 
 
-void AGrenade::OnRep_Exploded()
+void AGrenade::OnRep_GrenadeExploded()
 {
 	UE_LOG(LogTemp, Warning, TEXT("onrep exploded called"));
 	PlayExplosionEffects();
@@ -77,7 +79,7 @@ void AGrenade::Explode()
 
 	if (MyOwner)
 	{
-		bExploded = true;
+		bGrenadeExploded = true;
 
 		PlayExplosionEffects();
 
@@ -117,19 +119,16 @@ void AGrenade::PlayExplosionEffects()
 
 void AGrenade::ThrowGrenade(FVector EyeLocation, FVector HandLocation, FVector ThrowDirection)
 {
-	if (HasAuthority())
-	{
-		FVector ImpulseDirection = (ThrowDirection * 10000) - EyeLocation;
+	FVector ImpulseDirection = (ThrowDirection * 10000) - EyeLocation;
 
-		ImpulseDirection.Normalize();
+	ImpulseDirection.Normalize();
 
-		FVector Impulse = ImpulseDirection * ImpulseIntensity;
+	FVector Impulse = ImpulseDirection * ImpulseIntensity;
 
-		MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetSimulatePhysics(true);
 
-		MeshComp->AddImpulse(Impulse, NAME_None, true);
-	}
-		
+	MeshComp->AddImpulse(Impulse, NAME_None, true);
+
 	GetWorldTimerManager().SetTimer(TimerHandle_ExplosionDelay, this, &AGrenade::Explode, ExplosionDelay, false);
 }
 
@@ -137,5 +136,5 @@ void AGrenade::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(AGrenade, bExploded, COND_SkipOwner);
+	DOREPLIFETIME(AGrenade, bGrenadeExploded);
 }
