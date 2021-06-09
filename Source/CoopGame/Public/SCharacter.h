@@ -46,24 +46,57 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	/* Movement System */
 	void MoveForward(float Value);
-
 	void MoveRight(float Value);
 
 	void BeginCrouch();
-
 	void EndCrouch();
 
+	/* Weapon System */
 	void BeginZoom();
-
 	void EndZoom();
 
+	void PrepareThrow();
+	void Throw();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerPrepareThrow();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerThrow();
+
+	/* Interaction System */
+	void PerformInteractionCheck();
+
+	void CouldntFindInteractable();
+	void FoundNewInteractable(USInteractionComponent* Interactable);
+
+	void BeginInteract();
+	void EndInteract();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerBeginInteract();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerEndInteract();
+
+	void Interact();
+
+	/* Health System */
+	UFUNCTION()
+	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	
+	/* Components */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UCameraComponent* CameraComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USpringArmComponent* SpringArmComp;
 
+
+	/* Weapon System */
 	bool bWantsToZoom;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -78,23 +111,33 @@ protected:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	class ASWeapon* CurrentWeapon;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	USkeletalMeshComponent* WeaponMesh;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 	FName WeaponAttachSocketName;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player")
+	TSubclassOf<class AGrenade> StarterGrenadeClass;
+	
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	class AGrenade* CurrentGrenade;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+	FName GrenadeAttachSocketName;
+
+	/* Health System */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USHealthComponent* HealthComp;
-
-	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	/* Pawn died previously */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category="Player")
 	bool bDied;
 
-	/* Interaction System Variables and Methods */
+	/* Interaction System */
 	// How often in seconds to check for an interactable object. Set this to zero if you want to check every tick
 	// This is for optimisation
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
@@ -103,25 +146,6 @@ protected:
 	// How far we'll trace when we check if the player is looking at an interactable object
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	float InteractionCheckDistance;
-
-	void PerformInteractionCheck();
-
-	void CouldntFindInteractable();
-	void FoundNewInteractable(USInteractionComponent* Interactable);
-
-	void BeginInteract();
-	void EndInteract();
-
-	// We make some Remote Procedure Calls (RPCs) for our functions
-
-	// Reliable means it will always try to call the function even if connection is laggy
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerBeginInteract();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerEndInteract();
-
-	void Interact();
 
 	// Information about the current state of the players interaction
 	UPROPERTY()
@@ -141,16 +165,17 @@ public:
 
 	virtual FVector GetPawnViewLocation() const override;
 
+	/* Weapon System */
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void StartFire();
 
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void StopFire();
 
+	/* Interaction System */
 	// True if we're interacting with an item that has an interaction time (for eg a lamp taht takes 2 seconds to turn on)
 	bool IsInteracting() const;
 
 	// Get the time till we interact with the current interactable
 	float GetRemainingInteractTime() const;
-
 };

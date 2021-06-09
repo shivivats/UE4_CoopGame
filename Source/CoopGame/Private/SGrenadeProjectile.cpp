@@ -88,6 +88,7 @@ void ASGrenadeProjectile::PlayExplosionEffects()
 {
 	// spawn explosion effect
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	
 
 	MeshComp->SetVisibility(false, true);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);

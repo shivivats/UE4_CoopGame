@@ -12,6 +12,7 @@
 #include "Components/SHealthComponent.h"
 #include "Components/SInteractionComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Projectiles/Grenade.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -40,6 +41,8 @@ ASCharacter::ASCharacter()
 
 	WeaponAttachSocketName = "WeaponSocket";
 
+	GrenadeAttachSocketName = "GrenadeSocket";
+
 	InteractionCheckFrequency = 0.f;
 	InteractionCheckDistance = 1000.f; // in cms, so this is 10 meters max distance
 }
@@ -65,6 +68,9 @@ void ASCharacter::BeginPlay()
 		{
 			CurrentWeapon->SetOwner(this);
 			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+
+			WeaponMesh = Cast<USkeletalMeshComponent>(CurrentWeapon->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+
 		}
 	}
 }
@@ -99,9 +105,108 @@ void ASCharacter::EndZoom()
 	bWantsToZoom = false;
 }
 
+void ASCharacter::PrepareThrow()
+{
+	if(!HasAuthority())
+	{
+		ServerPrepareThrow();
+		return;
+	}
+
+	 if(CurrentWeapon)
+	 {
+		// if we have a weapon in hand, hide it
+		if(WeaponMesh)
+		{
+			//WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			WeaponMesh->SetVisibility(false);
+
+			// Now we spawn grenade in hand
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			SpawnParams.Owner = this;
+			//SpawnParams.Owner = this;
+
+			UE_LOG(LogTemp, Warning, TEXT("try spawn grenade in hand"));
+
+			// Spawn the grenade, for now in the weapon socket
+			CurrentGrenade = GetWorld()->SpawnActor<AGrenade>(StarterGrenadeClass, GetMesh()->GetSocketLocation(WeaponAttachSocketName), FRotator::ZeroRotator, SpawnParams);
+			if (CurrentGrenade)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("spawned grenade in hand"));
+				//CurrentGrenade->SetOwner(this);
+				CurrentGrenade->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, GrenadeAttachSocketName);
+				CurrentGrenade->SetActorScale3D(FVector(0.1f));
+			}
+		}
+
+	 }
+}
+
+void ASCharacter::ServerPrepareThrow_Implementation()
+{
+	PrepareThrow();
+}
+
+bool ASCharacter::ServerPrepareThrow_Validate()
+{
+	return true;
+}
+void ASCharacter::Throw()
+{
+	if (!HasAuthority())
+	{
+		ServerThrow();
+		return;
+	}
+
+	if(CurrentGrenade)
+	{
+		// call the throw function here
+		UE_LOG(LogTemp, Warning, TEXT("try throw grenade"));
+
+		// we need to calc the direction in which the impulse needs to be added.
+
+		FVector EyeLocation;
+		FRotator EyeRotation;
+		this->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+		FVector ThrowDirection = EyeRotation.Vector();
+
+		//FVector TraceEnd = EyeLocation + (ThrowDirection * 10000);
+
+		// so basically if we get a vector in the direction of the eye rotation
+		// we can add that to the socket location
+
+		FVector HandLocation = GetMesh()->GetSocketLocation(WeaponAttachSocketName);
+
+		CurrentGrenade->ThrowGrenade(EyeLocation, HandLocation, ThrowDirection);
+		CurrentGrenade = nullptr;
+	}
+
+	if (CurrentWeapon)
+	{
+		// if we have a weapon in hand, show it now
+		if (WeaponMesh)
+		{
+			WeaponMesh->SetVisibility(true);
+		}
+	}
+}
+
+void ASCharacter::ServerThrow_Implementation()
+{
+	Throw();
+}
+
+bool ASCharacter::ServerThrow_Validate()
+{
+	return true;
+}
+
 void ASCharacter::StartFire()
 {
-	if (CurrentWeapon)
+	if (CurrentWeapon && WeaponMesh->IsVisible())
 	{
 		CurrentWeapon->StartFire();
 	}
@@ -138,13 +243,15 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+		StopFire();
+
 		DetachFromControllerPendingDestroy();
 
 		// after 10 seconds, get destroyed, nerd
 		SetLifeSpan(10.f);
-
 	}
 }
+
 
 void ASCharacter::PerformInteractionCheck()
 {
@@ -168,11 +275,11 @@ void ASCharacter::PerformInteractionCheck()
 		// Check if we hit something
 		if (TraceHit.GetActor())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("saw an object"));
+			//UE_LOG(LogTemp, Warning, TEXT("saw an object"));
 			// Check if the thing we hit is an interactable
 			if (USInteractionComponent* InteractionComponent = Cast<USInteractionComponent>(TraceHit.GetActor()->GetComponentByClass(USInteractionComponent::StaticClass())))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("saw an interactable object"));
+				//UE_LOG(LogTemp, Warning, TEXT("saw an interactable object"));
 
 				// Get how far away we are from the object
 				float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
@@ -250,7 +357,7 @@ void ASCharacter::BeginInteract()
 	// if we have an interactable component
 	if (USInteractionComponent* Interactable = GetInteractable())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("try to interact with an object"));
+		//UE_LOG(LogTemp, Warning, TEXT("try to interact with an object"));
 
 		Interactable->BeginInteract(this);
 
@@ -340,7 +447,7 @@ void ASCharacter::Tick(float DeltaTime)
 	// only perform interaction check according to the interaction frequency, for optimisation
 	if (GetWorld()->TimeSince(InteractionData.LastInteractionCheckTime) >= InteractionCheckFrequency)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("performing interaction check"));
+		//UE_LOG(LogTemp, Warning, TEXT("performing interaction check"));
 		PerformInteractionCheck();
 	}
 }
@@ -369,6 +476,9 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASCharacter::StartFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StopFire);
+
+	PlayerInputComponent->BindAction("Throw", IE_Pressed, this, &ASCharacter::PrepareThrow);
+	PlayerInputComponent->BindAction("Throw", IE_Released, this, &ASCharacter::Throw);
 }
 
 FVector ASCharacter::GetPawnViewLocation() const
@@ -386,5 +496,6 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+	DOREPLIFETIME(ASCharacter, WeaponMesh);
 	DOREPLIFETIME(ASCharacter, bDied);
 }
