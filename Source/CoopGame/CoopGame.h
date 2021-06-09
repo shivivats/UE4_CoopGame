@@ -11,3 +11,4 @@
 // collision channels for traces
 #define COLLISION_WEAPON			ECC_GameTraceChannel1
 #define COLLISION_WEAPON_PENETRABLE ECC_GameTraceChannel2
+#define COLLISION_INTERACTACTION	ECC_GameTraceChannel3

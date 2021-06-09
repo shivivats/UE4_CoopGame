@@ -13,6 +13,7 @@
 #include "Components/SInteractionComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Projectiles/Grenade.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -260,8 +261,16 @@ void ASCharacter::PerformInteractionCheck()
 	FVector EyeLocation;
 	FRotator EyeRotation;
 	this->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+	//UE_LOG(LogTemp, Warning, TEXT("eye location value before is: %s"), *EyeLocation.ToString());
+
+	FName HeadBoneLocationName = "head";
+	EyeLocation = GetMesh()->GetBoneLocation(HeadBoneLocationName, EBoneSpaces::WorldSpace);
+
+
+	//UE_LOG(LogTemp, Warning, TEXT("eye location value after is: %s"), *EyeLocation.ToString());
 	
-	FVector TraceStart = EyeLocation;
+	FVector TraceStart = EyeLocation + GetActorForwardVector() * 30.f;
 	FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * InteractionCheckDistance);
 	FHitResult TraceHit;
 
@@ -270,16 +279,16 @@ void ASCharacter::PerformInteractionCheck()
 	QueryParams.AddIgnoredActor(true);
 
 	// Run a line trace where we are looking
-	if (GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+	if (GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, COLLISION_INTERACTACTION, QueryParams))
 	{
 		// Check if we hit something
 		if (TraceHit.GetActor())
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("saw an object"));
+			UE_LOG(LogTemp, Warning, TEXT("saw an object"));
 			// Check if the thing we hit is an interactable
 			if (USInteractionComponent* InteractionComponent = Cast<USInteractionComponent>(TraceHit.GetActor()->GetComponentByClass(USInteractionComponent::StaticClass())))
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("saw an interactable object"));
+				UE_LOG(LogTemp, Warning, TEXT("saw an interactable object"));
 
 				// Get how far away we are from the object
 				float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
