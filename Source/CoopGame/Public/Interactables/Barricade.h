@@ -25,6 +25,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Barricade")
 	class UStaticMeshComponent* BarricadeMesh;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Barricade")
+	class UBoxComponent* InteractingBox;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Barricade")
+	class USInteractionComponent* InteractionComp;
 
 };
