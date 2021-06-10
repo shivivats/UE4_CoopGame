@@ -2,26 +2,23 @@
 
 
 #include "Interactables/AmmoCrate.h"
+#include "Components/SInteractionComponent.h"
 
 // Sets default values
 AAmmoCrate::AAmmoCrate()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	CrateMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CrateMesh"));
+	RootComponent = CrateMesh;
+
+	InteractionComp = CreateDefaultSubobject<USInteractionComponent>(TEXT("InteractionComp"));
+	InteractionComp->InteractionTime = 5.f;
+	InteractionComp->InteractionDistance = 300.f;
+	InteractionComp->InteractableNameText = FText::FromString("Ammo Crate");
+	InteractionComp->InteractableActionText = FText::FromString("resupply ammo");
+	InteractionComp->bAllowMultipleInteractors = false;
+	InteractionComp->SetupAttachment(RootComponent);
+
+	SetReplicates(true);
+	SetReplicateMovement(true);
 
 }
-
-// Called when the game starts or when spawned
-void AAmmoCrate::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AAmmoCrate::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-

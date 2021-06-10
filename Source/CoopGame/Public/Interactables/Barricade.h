@@ -16,9 +16,6 @@ public:
 	ABarricade();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Barricade")
 	class UStaticMeshComponent* FrameMesh;
 

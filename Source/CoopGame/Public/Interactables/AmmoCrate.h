@@ -16,11 +16,10 @@ public:
 	AAmmoCrate();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Barricade")
+		class UStaticMeshComponent* CrateMesh;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Barricade")
+		class USInteractionComponent* InteractionComp;
 
 };

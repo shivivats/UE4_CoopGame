@@ -30,18 +30,8 @@ ABarricade::ABarricade()
 	InteractionComp->InteractableNameText = FText::FromString("");
 	InteractionComp->InteractableActionText = FText::FromString("Barricade");
 	InteractionComp->bAllowMultipleInteractors = false;
-
 	InteractionComp->SetupAttachment(RootComponent);
-
-	/** @TODO: Setup default values here.*/
 
 	SetReplicates(true);
 	SetReplicateMovement(true);
-}
-
-// Called when the game starts or when spawned
-void ABarricade::BeginPlay()
-{
-	Super::BeginPlay();
-	
 }

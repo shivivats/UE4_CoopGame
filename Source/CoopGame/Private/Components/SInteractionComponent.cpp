@@ -70,17 +70,6 @@ bool USInteractionComponent::CanInteract(class ASCharacter* Character) const
 
 	const bool bPlayerAlreadyInteracting = !bAllowMultipleInteractors && Interactors.Num() >= 1;
 
-	UE_LOG(LogTemp, Warning, 
-		TEXT("Interaction stuff. not bAllowMultipleInteractors is %s, Interactors.Num() is %d"), 
-		(!bAllowMultipleInteractors ? TEXT("true") : TEXT("false")), Interactors.Num());
-
-	UE_LOG(LogTemp, Warning, 
-		TEXT("Interaction stuff. not bPlayerAlreadyInteracting is %s, IsActive is %s, GetOwner thing is %s, Character thing is %s"), 
-		(!bPlayerAlreadyInteracting ? TEXT("true") : TEXT("false")), 
-		(IsActive() ? TEXT("true") : TEXT("false")), 
-		(GetOwner() != nullptr ? TEXT("true") : TEXT("false")), 
-		(Character != nullptr ? TEXT("true") : TEXT("false")));
-
 	// check some conditions for if we can interact
 	return !bPlayerAlreadyInteracting && IsActive() && GetOwner() != nullptr && Character != nullptr;
 }
