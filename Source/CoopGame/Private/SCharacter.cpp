@@ -284,11 +284,11 @@ void ASCharacter::PerformInteractionCheck()
 		// Check if we hit something
 		if (TraceHit.GetActor())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("saw an object"));
+			//UE_LOG(LogTemp, Warning, TEXT("saw an object"));
 			// Check if the thing we hit is an interactable
 			if (USInteractionComponent* InteractionComponent = Cast<USInteractionComponent>(TraceHit.GetActor()->GetComponentByClass(USInteractionComponent::StaticClass())))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("saw an interactable object"));
+				//UE_LOG(LogTemp, Warning, TEXT("saw an interactable object"));
 
 				// Get how far away we are from the object
 				float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
@@ -324,8 +324,10 @@ void ASCharacter::CouldntFindInteractable()
 	// Tell the interactable we've stopped focusing on it and clear the current interactable
 	if (USInteractionComponent* Interactable = GetInteractable())
 	{
+		if (this->IsLocallyControlled())
+		{
 		Interactable->EndFocus(this);
-
+		}
 		if (InteractionData.bInteractHeld)
 		{
 			EndInteract();
@@ -344,12 +346,19 @@ void ASCharacter::FoundNewInteractable(USInteractionComponent* Interactable)
 	// remove focus from the old interactable if any
 	if (USInteractionComponent* OldInteractable = GetInteractable())
 	{
+		if (this->IsLocallyControlled())
+		{
 		OldInteractable->EndFocus(this);
+		}
 	}
-
 	// then update the interaction data to have the new interactable
 	InteractionData.ViewedInteractionComponent = Interactable;
-	Interactable->BeginFocus(this);
+	
+	if(this->IsLocallyControlled())
+	{
+		Interactable->BeginFocus(this);
+	}
+
 }
 
 void ASCharacter::BeginInteract()
@@ -359,6 +368,14 @@ void ASCharacter::BeginInteract()
 	{
 		// we wanna call begin interact on the server
 		ServerBeginInteract();
+	}
+
+	/* As an optimisation, the server only checks that we're looking at an item once we begin interacting with it. 
+	This saves the server doing a check every tick for an interactable item. The except is a non-instant interact.
+	In this case, the server will check every tick for the duration of the interact.*/
+	if(HasAuthority())
+	{
+		PerformInteractionCheck();
 	}
 
 	InteractionData.bInteractHeld = true;

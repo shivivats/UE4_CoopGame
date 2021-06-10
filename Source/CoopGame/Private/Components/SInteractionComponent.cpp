@@ -76,13 +76,10 @@ bool USInteractionComponent::CanInteract(class ASCharacter* Character) const
 
 void USInteractionComponent::RefreshWidget()
 {
-	if (!bHiddenInGame)
+	// Make sure the widget is initialised and that we are displaying the right values (these may have changed)
+	if (USInteractionWidget* InteractionWidget = Cast<USInteractionWidget>(GetUserWidgetObject()))
 	{
-		// Make sure the widget is initialised and that we are displaying the right values (these may have changed)
-		if (USInteractionWidget* InteractionWidget = Cast<USInteractionWidget>(GetUserWidgetObject()))
-		{
-			InteractionWidget->UpdateInteractionWidget(this);
-		}
+		InteractionWidget->UpdateInteractionWidget(this);
 	}
 }
 
@@ -96,8 +93,11 @@ void USInteractionComponent::BeginFocus(class ASCharacter* Character)
 	// call the delegate
 	OnBeginFocus.Broadcast(Character);
 
-	// show this interactable in game
-	SetHiddenInGame(false);
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		// show this interactable in game
+		SetHiddenInGame(false);
+	}
 
 	/*
 	// if not the server
@@ -123,9 +123,11 @@ void USInteractionComponent::EndFocus(class ASCharacter* Character)
 	// call the delegate
 	OnEndFocus.Broadcast(Character);
 
-	// hide this interactable in game
-	SetHiddenInGame(true);
-
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		// hide this interactable in game
+		SetHiddenInGame(true);
+	}
 	/*
 	// if not the server
 	if (!GetOwner()->HasAuthority())
