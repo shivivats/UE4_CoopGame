@@ -9,6 +9,7 @@
 enum class EWaveState : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, KillerActor, AController*, KillerController);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDied, ASPlayerController*, DeadPlayerController);
 
 /**
  * 
@@ -64,6 +65,8 @@ protected:
 
 	void RespawnDeadPlayers();
 
+	TArray<APawn*> AlivePlayersList;
+
 public:
 
 	ASGameMode();
@@ -75,4 +78,10 @@ public:
 	// blueprintassignable will allow us to hook onto this event in blueprint
 	UPROPERTY(BlueprintAssignable, Category="GameMode")
 	FOnActorKilled OnActorKilled;
+	
+	UFUNCTION(BlueprintCallable, Category="GameMode")
+	TArray<APawn*> GetAlivePlayers();
+
+	UPROPERTY(BlueprintAssignable, Category = "GameMode")
+	FOnPlayerDied OnPlayerDied;
 };

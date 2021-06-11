@@ -14,6 +14,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Projectiles/Grenade.h"
 #include "DrawDebugHelpers.h"
+#include "SGameMode.h"
+#include "Player/SPlayerController.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -241,10 +243,17 @@ void ASCharacter::OnHealthChanged(USHealthComponent* OwningHealthComp, float Hea
 		// we ded
 		bDied = true;
 
+		//StopFire();
+		if (CurrentWeapon)
+		{
+			GetWorld()->DestroyActor(CurrentWeapon);
+		}
+
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		StopFire();
+		ASPlayerController* PC = Cast<ASPlayerController>(GetController());
+		PC->PlayerDied();
 
 		DetachFromControllerPendingDestroy();
 
@@ -486,8 +495,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASCharacter::MoveRight);
 
-	PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::AddControllerYawInput);
+	//PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::AddControllerYawInput);
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ASCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ASCharacter::EndCrouch);

@@ -7,6 +7,8 @@
 #include "EngineUtils.h"
 #include "SGameState.h"
 #include "SPlayerState.h"
+#include "Player/SPlayerController.h"
+#include "SCharacter.h"
 
 
 ASGameMode::ASGameMode()
@@ -40,6 +42,37 @@ void ASGameMode::Tick(float DeltaSeconds)
 
 	// check every second if any players are alive
 	CheckAnyPlayerAlive();
+}
+
+TArray<APawn*> ASGameMode::GetAlivePlayers()
+{
+
+	AlivePlayersList.Empty();
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (PC && PC->GetPawn())
+		{
+			APawn* MyPawn = PC->GetPawn();
+			USHealthComponent* HealthComp = Cast<USHealthComponent>(MyPawn->FindComponentByClass(USHealthComponent::StaticClass()));
+					
+
+			// ensure throws a breakpoint when we cant find the healthcomponent on the player
+			// throwing a breakpoint makes sure that we realise that there's something wrong with our code
+			// since all players should have a health component attached
+			if (HealthComp && HealthComp->GetHealth() > 0.f)
+			{
+				// a player is still alive
+
+				//FString Name = MyPawn->GetName();
+				//UE_LOG(LogTemp, Log, TEXT("found a player alive with name %s"), *Name);
+				AlivePlayersList.AddUnique(MyPawn);
+			}			
+		}
+	}
+
+	return AlivePlayersList;
 }
 
 void ASGameMode::StartWave()
@@ -121,7 +154,7 @@ void ASGameMode::CheckAnyPlayerAlive()
 			// ensure throws a breakpoint when we cant find the healthcomponent on the player
 			// throwing a breakpoint makes sure that we realise that there's something wrong with our code
 			// since all players should have a health component attached
-			if(ensure(HealthComp) && HealthComp->GetHealth() > 0.f)
+			if(HealthComp && HealthComp->GetHealth() > 0.f)
 			{
 				// a player is still alive
 
@@ -164,10 +197,15 @@ void ASGameMode::RespawnDeadPlayers()
 	// this will give us all the player controllers and since its only inside the game mode, it'll only run on the server
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		APlayerController* PC = It->Get();
-		if (PC && PC->GetPawn() == nullptr)
+		ASPlayerController* PC = Cast<ASPlayerController>(It->Get());
+
+		if (PC)
 		{
-			RestartPlayer(PC);
+			ASCharacter* Char = Cast<ASCharacter>(PC->GetPawn());
+			if(Char == nullptr)
+			{
+				PC->PlayerRespawn();
+			}			
 		}
 	}
 }
