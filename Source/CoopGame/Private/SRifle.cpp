@@ -391,4 +391,5 @@ void ASRifle::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ASRifle, HitScanTrace, COND_SkipOwner);
+	DOREPLIFETIME(ASRifle, bShootPenetrating);
 }

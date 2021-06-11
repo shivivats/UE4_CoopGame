@@ -62,7 +62,7 @@ protected:
 	UFUNCTION()
 	void OnRep_HitScanTrace();
 
-	UPROPERTY(EditAnywhere, Category="Rifle|Shooting")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category="Rifle|Shooting")
 	bool bShootPenetrating;
 
 	UFUNCTION(Server, Reliable, WithValidation)
