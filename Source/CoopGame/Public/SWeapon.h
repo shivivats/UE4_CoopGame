@@ -21,34 +21,34 @@ protected:
 
 	virtual void PlayFireEffects(FVector TracerEnd);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Weapon|Components")
 	class USkeletalMeshComponent* MeshComp;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Shooting")
 	TSubclassOf<class UDamageType> DamageType;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Shooting")
 	class UParticleSystem* MuzzleEffect;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Weapon")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Weapon|Shooting")
 	FName MuzzleSocketName;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Shooting")
 	class UParticleSystem* DefaultImpactEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Shooting")
 	class UParticleSystem* FleshImpactEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Shooting")
 	class UParticleSystem* TracerEffect;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Shooting")
 	FName TracerTargetName;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Shooting")
 	TSubclassOf<class UMatineeCameraShake> FireCamShake;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Shooting")
 	float BaseDamage;
 
 	virtual void Fire();
@@ -57,35 +57,35 @@ protected:
 	void ServerFire();
 
 	/* Ammo stuffs */
-	UPROPERTY(EditDefaultsOnly,  BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(Replicated, EditDefaultsOnly,  BlueprintReadOnly, Category = "Weapon|Ammo")
 	int32 MaximumAmmo;
 
-	UPROPERTY(VisibleDefaultsOnly,  BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(Replicated, VisibleDefaultsOnly,  BlueprintReadOnly, Category = "Weapon|Ammo")
 	int32 CurrentAmmo;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,  Category = "Weapon")
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly,  Category = "Weapon|Ammo")
 	int32 MagazineCapacity;
 
-	UPROPERTY(VisibleDefaultsOnly,  BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(Replicated, VisibleDefaultsOnly,  BlueprintReadOnly, Category = "Weapon|Ammo")
 	int32 MagazineCount;
 
-	UPROPERTY(VisibleDefaultsOnly,  BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(Replicated, VisibleDefaultsOnly,  BlueprintReadOnly, Category = "Weapon|Ammo")
 	bool bCanShoot;
 
 	/* Vertical Recoil. This will be reversed since positive pitch value actually goes down. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Recoil")
 	float PitchRecoilRangeMax;
 
 	/* Vertical Recoil. This will be reversed since positive pitch value actually goes down. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Recoil")
 	float PitchRecoilRangeMin;
 
 	/* Horizontal Recoil */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Recoil")
 	float YawRecoilRangeMax;
 
 	/* Horizontal Recoil */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Recoil")
 	float YawRecoilRangeMin;
 
 public:	
@@ -95,6 +95,15 @@ public:
 	virtual void StopFire();
 
 	virtual void ReduceAmmo();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	virtual void ServerReduceAmmo();
+
+	UFUNCTION(BlueprintCallable, Category="Weapon|Ammo")
+	virtual void AddAmmo();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	virtual void ServerAddAmmo();
 
 	virtual void Reload();
 

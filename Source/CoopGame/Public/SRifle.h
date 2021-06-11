@@ -47,13 +47,13 @@ protected:
 	float LastFiredTime;
 
 	/* RPM - Bullets per minute fired by the rifle */
-	UPROPERTY(EditDefaultsOnly, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, Category="Rifle|Shooting")
 	float RateOfFire;
 
 	float TimeBetweenShots;
 
 	/* Bullet Spread in Degrees */
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin=0.f))
+	UPROPERTY(EditDefaultsOnly, Category = "Rifle|Shooting", meta = (ClampMin=0.f))
 	float BulletSpread;
 
 	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
@@ -62,7 +62,7 @@ protected:
 	UFUNCTION()
 	void OnRep_HitScanTrace();
 
-	UPROPERTY(EditAnywhere, Category="Weapon")
+	UPROPERTY(EditAnywhere, Category="Rifle|Shooting")
 	bool bShootPenetrating;
 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -70,7 +70,7 @@ protected:
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = "BulletDecals")
+	UPROPERTY(EditAnywhere, Category = "Rifle|BulletDecals")
 	UMaterialInterface* BulletHoleDecal;
 
 	/* This function creates a bullet hole at the location we have hit */

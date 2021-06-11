@@ -55,12 +55,57 @@ void ASWeapon::StopFire()
 
 void ASWeapon::ReduceAmmo()
 {
+	if(!HasAuthority())
+	{
+		ServerReduceAmmo();
+	}
+
 	CurrentAmmo -= 1;
 
 	if (CurrentAmmo == 0 && MagazineCount >= 0)
 	{
 		Reload();
 	}
+}
+
+void ASWeapon::ServerReduceAmmo_Implementation()
+{
+	ReduceAmmo();
+}
+
+bool ASWeapon::ServerReduceAmmo_Validate()
+{
+	return true;
+}
+
+void ASWeapon::AddAmmo()
+{
+	if (!HasAuthority())
+	{
+		ServerAddAmmo();
+	}
+
+	int32 OldMagCount = MagazineCount;
+
+	MagazineCount += 1;
+
+	// if we werent able to shoot before reload, and it was because of magazine count 0
+	// then we also enable shooting
+	if (bCanShoot == false && OldMagCount == 0)
+	{
+		bCanShoot = true;
+		Reload();
+	}	
+}
+
+void ASWeapon::ServerAddAmmo_Implementation()
+{
+	AddAmmo();
+}
+
+bool ASWeapon::ServerAddAmmo_Validate()
+{
+	return true;
 }
 
 void ASWeapon::Reload()
@@ -87,4 +132,15 @@ void ASWeapon::AddRecoilEffects()
 		MyOwner->AddControllerPitchInput(-1.f * FMath::RandRange(PitchRecoilRangeMin, PitchRecoilRangeMax));
 		MyOwner->AddControllerYawInput(FMath::RandRange(YawRecoilRangeMin, YawRecoilRangeMax));
 	}
+}
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASWeapon, MaximumAmmo);
+	DOREPLIFETIME(ASWeapon, CurrentAmmo);
+	DOREPLIFETIME(ASWeapon, MagazineCapacity);
+	DOREPLIFETIME(ASWeapon, MagazineCount);
+	DOREPLIFETIME(ASWeapon, bCanShoot);
 }

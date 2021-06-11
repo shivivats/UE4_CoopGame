@@ -16,10 +16,13 @@ public:
 	AAmmoCrate();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Barricade")
-		class UStaticMeshComponent* CrateMesh;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ammo Crate|Components")
+	class UStaticMeshComponent* CrateMesh;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Barricade")
-		class USInteractionComponent* InteractionComp;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ammo Crate|Components")
+	class USInteractionComponent* InteractionComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ammo Crate|Ammo")
+	int32 NumResupplies;
 
 };

@@ -15,8 +15,10 @@ AAmmoCrate::AAmmoCrate()
 	InteractionComp->InteractionDistance = 300.f;
 	InteractionComp->InteractableNameText = FText::FromString("Ammo Crate");
 	InteractionComp->InteractableActionText = FText::FromString("resupply ammo");
-	InteractionComp->bAllowMultipleInteractors = false;
+	InteractionComp->bAllowMultipleInteractors = true;
 	InteractionComp->SetupAttachment(RootComponent);
+
+	NumResupplies = 5;
 
 	SetReplicates(true);
 	SetReplicateMovement(true);
