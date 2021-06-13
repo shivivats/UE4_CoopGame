@@ -9,9 +9,9 @@ USReplayGameInstance::USReplayGameInstance()
 	FriendlyRecordingName = "My Replay";
 }
 
-void USReplayGameInstance::StartRecording()
+void USReplayGameInstance::StartRecording(FString ReplayName, FString FriendlyName)
 {
-	StartRecordingReplay(RecordingName, FriendlyRecordingName);
+	StartRecordingReplay(ReplayName, FriendlyName);
 }
 
 void USReplayGameInstance::StopRecording()
@@ -19,7 +19,7 @@ void USReplayGameInstance::StopRecording()
 	StopRecordingReplay();
 }
 
-void USReplayGameInstance::ReplayRecording()
+void USReplayGameInstance::PlayRecordedReplay(FString ReplayName)
 {
-	PlayReplay(RecordingName, nullptr);
+	PlayReplay(ReplayName, nullptr);
 }
